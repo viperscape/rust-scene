@@ -1,4 +1,4 @@
-use super::{Comp,Eid};
+use super::{Comp};
 use std::rand;
 
 #[deriving(Show)]//, PartialEq)]
@@ -21,12 +21,21 @@ impl Entity {
         self.0.push(c);
     }
 
-    //todo...
+    //todo: make this pretty
     pub fn rem_comp (&mut self, c:Comp) {
-    
-    }
-    //ignore all of this
+        let mut matched = false;
+        let mut idx = 0;
+        for myc in self.0.iter() {
+            if myc.is(&c) { matched=true; break; }
+            idx += 1;
+        }
 
+        if matched { self.0.remove(idx); }
+    }
+
+
+
+    //ignore all of this
   /*  fn add_node (&mut self, e:Entity) {
         for i in self.0.iter_mut() {
             match *i {

@@ -21,16 +21,18 @@ impl Composite for Composites {
 
 fn main() {
   
-    let mut guy = Composites::Player.build();
+    let guy = Composites::Player.build();
 
     println!("{}",guy);
 
     let mut world = CES::new();
 
-    let health = world.register(Sys::new(vec!(Comp::Health(0))));
+    world.register(Sys::new(vec!(Comp::Health(0))));
 
-    let guy_id = world.add_ent(guy);
+    let player = world.add_ent(guy);
 
     let enemy = world.add_ent(Composites::Enemy.build());
     world.rem_ent(enemy);
+    world.ent_rem_comp(player,Comp::Collision);
+
 }

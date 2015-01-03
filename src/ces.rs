@@ -58,7 +58,7 @@ impl CES {
             self.empty.push(eid.0);
 
 
-            self.sig_sys(eid, |sys:&Sys, c:&Comp| {
+            self.sig_sys(eid, |sys:&Sys, _| {
                 sys.update(Comm::RemoveEnt(eid))
             });
 
