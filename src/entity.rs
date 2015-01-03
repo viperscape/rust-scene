@@ -16,6 +16,8 @@ impl Entity {
     pub fn get_comps (&self) -> &[Comp] {
         self.0.as_slice()
     }
+
+ //   pub fn 
     //ignore all of this
 
   /*  fn add_node (&mut self, e:Entity) {

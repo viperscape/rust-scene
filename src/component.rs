@@ -1,4 +1,4 @@
-#[deriving(Show, PartialEq)]
+#[deriving(Show, PartialEq, Copy)] // copy exists bc of CES sending systems updates
 pub enum Comp {
     Collect,
     Health(int),

@@ -1,4 +1,4 @@
-use super::{Sys,Entity,Eid};
+use super::{Sys,Entity,Eid,Comm, Comp};
 
 //#[deriving(Show)]
 pub struct CES {
@@ -11,6 +11,24 @@ impl CES {
     pub fn new () -> CES {
         CES { ent: Vec::new(), sys: Vec::new(), empty: Vec::new() }
     }
+
+
+    fn sig_sys (&self, eid: Eid, f: |&Sys,&Comp|) {
+        // todo: signal systems of change
+        for sys in self.sys.iter() {
+            for syscomp in sys.get_comps().iter() {
+                for entcomp in self.ent[eid.0].get_comps().iter() {
+                    if syscomp.is(entcomp) {
+                        
+                        let c = entcomp;
+                        f(sys,c);
+
+                        //sys.update(Comm::Update(eid,*c));
+                    }
+                }
+            }
+        }
+}
 
     /// use rand u64 for uid.. for now,; but, consider switching to incremental u64
     pub fn add_ent (&mut self, e:Entity) -> Eid {
@@ -28,17 +46,10 @@ impl CES {
             }
         };
 
-        // todo: signal systems of change
-        for sys in self.sys.iter() {
-            for syscomp in sys.get_comps().iter() {
-                for entcomp in self.ent[eid.0].get_comps().iter() {
-                    if syscomp.is(entcomp) {
-                        println!("Comp: {}",syscomp);
-                    }
-                // sys.update(Comm::Update(eid,
-                }
-            }
-        }
+        self.sig_sys(eid, |sys:&Sys, c:&Comp| {
+            println!("Comp: {}",c);
+            sys.update(Comm::Update(eid,*c))
+        });
 
         eid
          
