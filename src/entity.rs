@@ -17,7 +17,14 @@ impl Entity {
         self.0.as_slice()
     }
 
- //   pub fn 
+    pub fn add_comp (&mut self, c:Comp) {
+        self.0.push(c);
+    }
+
+    //todo...
+    pub fn rem_comp (&mut self, c:Comp) {
+    
+    }
     //ignore all of this
 
   /*  fn add_node (&mut self, e:Entity) {

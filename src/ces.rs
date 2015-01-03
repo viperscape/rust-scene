@@ -47,21 +47,41 @@ impl CES {
         };
 
         self.sig_sys(eid, |sys:&Sys, c:&Comp| {
-            println!("Comp: {}",c);
             sys.update(Comm::Update(eid,*c))
         });
 
         eid
          
     }
-    pub fn rem_ent (&mut self, e: Eid) {
-        if self.ent[e.0].get_id() == e.1 { 
-            self.empty.push(e.0);
+    pub fn rem_ent (&mut self, eid: Eid) {
+        if self.ent[eid.0].get_id() == eid.1 { 
+            self.empty.push(eid.0);
+
+
+            self.sig_sys(eid, |sys:&Sys, c:&Comp| {
+                sys.update(Comm::RemoveEnt(eid))
+            });
 
             //todo: consider clearing out entity? probably not necessary if skipped over anyways
             //self.ent[e.0].0 = Vec::new();
             //self.ent[e.0].1 = 0;
         }
+    }
+
+    pub fn ent_rem_comp (&mut self, eid: Eid, c: Comp) {
+        self.sig_sys(eid, |sys:&Sys, _| {
+            sys.update(Comm::RemoveComp(eid,c))
+        });
+        
+        self.ent[eid.0].rem_comp(c);
+    }
+
+    pub fn ent_add_comp (&mut self, eid: Eid, c: Comp) {
+        
+        self.ent[eid.0].add_comp(c);
+        self.sig_sys(eid, |sys:&Sys, _| {
+            sys.update(Comm::Update(eid,c))
+        });
     }
 
     pub fn register (&mut self, s:Sys) -> uint {
