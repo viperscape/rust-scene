@@ -1,5 +1,5 @@
 use super::{Comp,Eid, Entity};
-use std::sync::mpsc::{Sender, Receiver, channel,RecvError};
+use std::sync::mpsc::{Sender, Receiver, channel};
 
 
 #[derive(Show)]
@@ -10,18 +10,23 @@ pub enum Comm {
     Update(Eid,Comp),
     RemoveComp(Eid,Comp), //ent remove comp
     RemoveEnt(Eid),
+    Shutdown(String),
 }
 
+#[derive(Clone)]
 pub struct Sys {
     comps: Vec<Comp>, 
-    ch: (Sender<Comm>, Receiver<Comm>),
+    ch: Sender<Comm>,
 }
 impl Sys {
-    pub fn new (c:Vec<Comp>) -> Sys {
-        Sys { comps: c, ch: channel() }
+    pub fn new (c:Vec<Comp>, f: |Comm|: 'static+Send) -> (Sys,SysMan) {
+        let (chs,chr) = channel();
+        (Sys { comps: c, ch: chs },
+         SysMan::new(chr,f))
     }
     pub fn update (&self, c: Comm) {
-        self.ch.0.send(c);
+        println!("sending update: {}", c);
+        self.ch.send(c);
     }
     pub fn get_comps (&self) -> &[Comp] {
         self.comps.as_slice()
@@ -31,12 +36,23 @@ impl Sys {
 pub struct SysMan {
     ent: Vec<Entity>,
     ch: Receiver<Comm>,
+    work: |Comm|:'static+Send,
 }
 impl SysMan {
-    pub fn new (e:Vec<Entity>, chr: Receiver<Comm>) -> SysMan {
-        SysMan { ent: e, ch: chr }
+    pub fn new (chr: Receiver<Comm>, f: |Comm|:'static+Send) -> SysMan {
+        SysMan { ent: Vec::new(), ch: chr, work: f }
     }
-    pub fn update (&self) -> Result<Comm,RecvError> {
-        self.ch.recv()
+
+    pub fn updater (mut self) {
+        for comm in self.ch.iter() {
+            println!("updater: {}",comm);
+            match comm {
+                Comm::Shutdown(r) => {
+                    println!("shutting down sys: {}",r);
+                    break;
+                },
+                _ => (self.work)(comm),
+            }
+        }
     }
 }

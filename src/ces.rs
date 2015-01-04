@@ -1,29 +1,46 @@
-use super::{Sys,Entity,Eid,Comm, Comp};
+use super::{Sys,SysMan,Entity,Eid,Comm, Comp};
+use std::thread::Thread;
 
 //#[deriving(Show)]
 pub struct CES {
     ent: Vec<u64>, 
-    sys: Vec<Sys>,
+    sys: Vec<Sys>, //convert to arc?
+    //todo: add a hashmap/vec of sys, based on ID for faster lookups
     empty: Vec<uint>, //marked as removed/available entity slots
 }
 
 impl CES {
-    pub fn new (s:Vec<Sys>) -> CES {
+    pub fn new (mut s:Vec<(Sys,SysMan)>) -> CES {
+        let mut vs = Vec::new();
+        for n in s.drain() {
+            let (sys,sysman) = n;
+            sys.update(Comm::Msg("test".to_string()));
+            vs.push(sys); 
+
+            //spawn the thread with sysman data
+            Thread::spawn(move |:| {
+                sysman.updater();
+            }).detach();
+
+            
+        }
+        
+
         CES { ent: Vec::new(), 
-              sys: s, 
+              sys: vs, 
               empty: Vec::new() }
     }
 
-
-    fn with_sys (&self, c: &Comp) -> Option<&Sys> {
+    /// update systems with matching component
+    fn update_sys (&self, c: &Comp, f: |&Sys|) {
         for sys in self.sys.iter() {
-            for syscomp in sys.get_comps().iter() {
+            'this_sys: for syscomp in sys.get_comps().iter() {
                 if syscomp.is(c) {
-                    return Some(sys)
+                    f(sys);
+                    break 'this_sys;
                 }
             }
         }
-        None
     }
 
 
@@ -63,31 +80,16 @@ impl CES {
     }
 
     pub fn ent_rem_comp (&mut self, eid: Eid, c: Comp) {
-       for sys in self.sys.iter() {
-            for syscomp in sys.get_comps().iter() {
-                if syscomp.is(&c) {
-                    sys.update(Comm::RemoveComp(eid,c));
-                    return;
-                }
-            }
-        }
+        self.update_sys(&c, |sys| sys.update(Comm::RemoveComp(eid,c)));
     }
 
     pub fn ent_add_comp (&mut self, eid: Eid, c: Comp) {
-        for sys in self.sys.iter() {
-            for syscomp in sys.get_comps().iter() {
-                if syscomp.is(&c) {
-                    sys.update(Comm::AddComp(eid,c));
-                    return;
-                }
-            }
-        }
+        self.update_sys(&c, |sys| sys.update(Comm::AddComp(eid,c)));
     }
 
-
-    //todo: remove this, register all sys at ces new
-   /* pub fn register (&mut self, s:Sys) -> uint {
-        self.sys.push(s);
-        self.sys.len()-1
-    }*/
+    pub fn shutdown(&self, s:&'static str) {
+        for sys in self.sys.iter() {
+            sys.update(Comm::Shutdown(s.to_string()))
+        }
+    }
 }

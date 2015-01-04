@@ -1,4 +1,4 @@
-pub use system::{Sys,Comm};
+pub use system::{Sys,SysMan, Comm};
 pub use entity::{Entity};
 pub use component::{Comp};
 pub use composite::{Composite};
