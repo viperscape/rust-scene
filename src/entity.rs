@@ -1,7 +1,7 @@
 use super::{Comp};
 use std::rand;
 
-#[deriving(Show)]//, PartialEq)]
+#[derive(Show)]//, PartialEq)]
 pub struct Entity(Vec<Comp>,u64);
 
 impl Entity {

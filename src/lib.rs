@@ -13,3 +13,6 @@ pub mod system;
 
 //todo: convert to tuple-struct?
 pub type Eid = (uint,u64); //entity specific ID
+
+// for use in eventual arrays
+//pub const MAX_ENT: uint = 64000;

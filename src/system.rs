@@ -1,16 +1,17 @@
-use super::{Comp,Eid};
-use std::comm::{Sender, Receiver, channel};
+use super::{Comp,Eid, Entity};
+use std::sync::mpsc::{Sender, Receiver, channel,RecvError};
 
 
-#[deriving(Show)]
+#[derive(Show)]
 pub enum Comm {
     Msg(String),
+    AddEnt(Eid,Vec<Comp>),
+    AddComp(Eid,Comp), //ent add comp 
     Update(Eid,Comp),
-    RemoveComp(Eid,Comp),
+    RemoveComp(Eid,Comp), //ent remove comp
     RemoveEnt(Eid),
 }
 
-//#[deriving(Show)]
 pub struct Sys {
     comps: Vec<Comp>, 
     ch: (Sender<Comm>, Receiver<Comm>),
@@ -24,5 +25,18 @@ impl Sys {
     }
     pub fn get_comps (&self) -> &[Comp] {
         self.comps.as_slice()
+    }
+}
+
+pub struct SysMan {
+    ent: Vec<Entity>,
+    ch: Receiver<Comm>,
+}
+impl SysMan {
+    pub fn new (e:Vec<Entity>, chr: Receiver<Comm>) -> SysMan {
+        SysMan { ent: e, ch: chr }
+    }
+    pub fn update (&self) -> Result<Comm,RecvError> {
+        self.ch.recv()
     }
 }

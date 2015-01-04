@@ -25,9 +25,7 @@ fn main() {
 
     println!("{}",guy);
 
-    let mut world = CES::new();
-
-    world.register(Sys::new(vec!(Comp::Health(0))));
+    let mut world = CES::new(vec!(Sys::new(vec!(Comp::Health(0)))));
 
     let player = world.add_ent(guy);
 
