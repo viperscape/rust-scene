@@ -2,7 +2,7 @@ use super::{Comp,Eid, Entity};
 use std::sync::mpsc::{Sender, Receiver, channel};
 
 
-#[derive(Show)]
+#[derive(Show,Clone)]
 pub enum Comm {
     Msg(String),
     AddEnt(Eid,Vec<Comp>),

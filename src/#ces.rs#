@@ -21,11 +21,8 @@ impl CES {
             Thread::spawn(move |:| {
                 sysman.updater();
             }).detach();
-
-            
         }
         
-
         CES { ent: Vec::new(), 
               sys: vs, 
               empty: Vec::new() }
