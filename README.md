@@ -9,5 +9,6 @@ This is, in its current state, template code to review and use in a project. My 
 * Threading support, to scale out any System with use of Event Bus or Messaging (currently messaging is planned)
 * Scene graph/hierarchy for dependencies amongst entities (with Component propagation)
 * Make use pre-allocated arrays for memory-continuity, for now Vecs everywhere
+* Try and avoid vtable, reflection, indirection where possible
 
 [see example](/src/main.rs)
