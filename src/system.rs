@@ -79,7 +79,9 @@ impl SysMan {
                     self.with_ent(eid, |&:mut e| e.add_comp(comp));
                 },
 
-                Comm::RemoveComp(eid,comp) => {},                
+                Comm::RemoveComp(eid,comp) => {
+                    self.with_ent(eid, |&:mut e| e.rem_comp(comp));
+                },                
 
                 Comm::Shutdown(r) => {
                     println!("shutting down sys: {}",r);
