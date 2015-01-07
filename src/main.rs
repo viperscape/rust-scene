@@ -1,5 +1,5 @@
 extern crate "rust-scene" as scene;
-use scene::{Comp,Composite,Entity,Sys,CES};
+use scene::{Comp,Composite,Entity,Sys,CES,Comm};
 
 enum Composites {
     Player,
@@ -27,7 +27,7 @@ fn main() {
     
     let mut sys = vec!(Sys::new(vec!(Comp::Health(0),
                                  Comp::Collision),
-                            |comm| println!("sysman: {}",comm)));
+                            box |comm| println!("sysman: {}",comm)));
 
     let mut world = CES::new(sys);
 

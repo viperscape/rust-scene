@@ -14,25 +14,21 @@ impl CES {
         let mut vs = Vec::new();
         for n in s.drain() {
             let (sys,sysman) = n;
-            sys.update(Comm::Msg("test".to_string()));
             vs.push(sys); 
 
             //spawn the thread with sysman data
             Thread::spawn(move |:| {
                 sysman.updater();
             }).detach();
-
-            
         }
         
-
         CES { ent: Vec::new(), 
               sys: vs, 
               empty: Vec::new() }
     }
 
     /// update systems with matching component
-    pub fn update_sys (&self, c: &Comp, f: |&Sys|) {
+    pub fn update_sys<F> (&self, c: &Comp, f: F) where F: Fn(&Sys) {
         for sys in self.sys.iter() {
             'this_sys: for syscomp in sys.get_comps().iter() {
                 if syscomp.is(c) {
@@ -67,11 +63,19 @@ impl CES {
             }
         };
 
-         for sys in self.sys.iter() {
-             let mut comps = Vec::new();
-             comps.push_all(e.get_comps());
-             sys.update(Comm::AddEnt(eid,comps));
-         }
+        for sys in self.sys.iter() {
+            'this_sys: for syscomp in sys.get_comps().iter() {
+                for entcomp in e.get_comps().iter() {
+                    if syscomp.is(entcomp) {
+                        
+                       // let mut comps = Vec::new();
+                        //comps.push_all(e.get_comps());
+                        sys.update(Comm::AddEnt(e.clone())); //eid,comps));
+                        break 'this_sys;
+                    }
+                }
+            }
+        }
 
         eid
     }
@@ -84,11 +88,11 @@ impl CES {
     }
 
     pub fn ent_rem_comp (&mut self, eid: Eid, c: Comp) {
-        self.update_sys(&c, |sys| sys.update(Comm::RemoveComp(eid,c)));
+        self.update_sys(&c, |sys:&Sys| sys.update(Comm::RemoveComp(eid,c)));
     }
 
     pub fn ent_add_comp (&mut self, eid: Eid, c: Comp) {
-        self.update_sys(&c, |sys| sys.update(Comm::AddComp(eid,c)));
+        self.update_sys(&c, |sys:&Sys| sys.update(Comm::AddComp(eid,c)));
     }
 
     pub fn shutdown(&self, s:&'static str) {
