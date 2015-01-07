@@ -6,7 +6,7 @@ pub struct CES {
     ent: Vec<u64>, 
     sys: Vec<Sys>, //convert to arc?
     //todo: add a hashmap/vec of sys, based on ID for faster lookups
-    empty: Vec<uint>, //marked as removed/available entity slots
+    empty: Vec<uint>, //marked as removed/available entity slots, uint since that is based on vec total size
 }
 
 impl CES {

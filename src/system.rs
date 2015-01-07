@@ -1,4 +1,4 @@
-use super::{Comp,Eid, Entity};
+use super::{Comp,Eid, Entity, MAX_ENT};
 use std::sync::mpsc::{Sender, Receiver, channel};
 
 
@@ -43,17 +43,19 @@ impl SysMan {
         SysMan { ent: Vec::new(), ch: chr, work: f }
     }
 
-   /* pub fn with_ent (&mut self, eid:Eid, f: Box<Fn(&mut Entity)>) {
+    pub fn with_ent<F> (&mut self, eid:Eid, f: F) where F: Fn(&mut Entity) {
         for e in self.ent.iter_mut() {
             if e.get_id() == eid.1 {
                 (f)(e);
             }
         }
-    }*/
+    }
 
     // called from CES
     pub fn updater (mut self) {
-        for comm in self.ch.iter() {
+        let mut chr = self.ch.recv();
+        while chr.is_ok() {
+            let comm = chr.unwrap();
             match comm {
                 Comm::Update(eid,comp) => (self.work)(comm),
 
@@ -74,7 +76,7 @@ impl SysMan {
                 },
 
                 Comm::AddComp(eid,comp) => {
-                   // self.with_ent(eid, |mut e| e.add_comp(comp));
+                    self.with_ent(eid, |&:mut e| e.add_comp(comp));
                 },
 
                 Comm::RemoveComp(eid,comp) => {},                
@@ -86,6 +88,8 @@ impl SysMan {
                
                 _ => (),
             }
+
+            chr = self.ch.recv();
         }
     }
 }
