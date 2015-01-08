@@ -26,7 +26,7 @@ impl CES {
         }
         
         CES { ent: Vec::new(), 
-              sys: Arc::new(vs),
+              sys: avs,
               empty: Vec::new() }
     }
 
