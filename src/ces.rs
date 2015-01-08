@@ -1,10 +1,11 @@
 use super::{Sys,SysMan,Entity,Eid,Comm, Comp};
 use std::thread::Thread;
+use std::sync::Arc;
 
 //#[deriving(Show)]
 pub struct CES {
     ent: Vec<u64>, 
-    sys: Vec<Sys>, //convert to arc?
+    sys: Arc<Vec<Sys>>, //immutable, and Arc for systems to lookup 
     //todo: add a hashmap/vec of sys, based on ID for faster lookups
     empty: Vec<uint>, //marked as removed/available entity slots, uint since that is based on vec total size
 }
@@ -12,18 +13,20 @@ pub struct CES {
 impl CES {
     pub fn new (mut s:Vec<(Sys,SysMan)>) -> CES {
         let mut vs = Vec::new();
-        for n in s.drain() {
-            let (sys,sysman) = n;
-            vs.push(sys); 
+        let mut vsm = Vec::new();
+        s.into_iter().map(|(sys,sysman)| {vs.push(sys); vsm.push(sysman)}); 
 
-            //spawn the thread with sysman data
-            Thread::spawn(move |:| {
-                sysman.updater();
+        let avs = Arc::new(vs);
+
+        for sysman in vsm.drain() {
+            let avs_ = avs.clone();
+            Thread::spawn(move || {
+                sysman.updater(avs_); //constantly listens to CES communication
             }).detach();
         }
         
         CES { ent: Vec::new(), 
-              sys: vs, 
+              sys: Arc::new(vs),
               empty: Vec::new() }
     }
 

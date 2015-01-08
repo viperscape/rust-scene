@@ -1,7 +1,8 @@
 use super::{Comp,Eid, Entity, MAX_ENT};
 use std::sync::mpsc::{Sender, Receiver, channel};
+use std::sync::Arc;
 
-
+/// communication from CES to systems, and between systems
 #[derive(Show,Clone)]
 pub enum Comm {
     Msg(String),
@@ -52,7 +53,7 @@ impl SysMan {
     }
 
     // called from CES
-    pub fn updater (mut self) {
+    pub fn updater (mut self, avs: Arc<Vec<Sys>>) {
         let mut chr = self.ch.recv();
         while chr.is_ok() {
             let comm = chr.unwrap();
