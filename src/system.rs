@@ -5,13 +5,16 @@ use std::sync::Arc;
 /// communication from CES to systems, and between systems
 #[derive(Show,Clone)]
 pub enum Comm {
-    Msg(String),
     AddEnt(Entity),//Eid,Vec<Comp>),
     AddComp(Eid,Comp), //ent add comp 
     Update(Eid,Comp),
+    
     RemoveComp(Eid,Comp), //ent remove comp
     RemoveEnt(Eid),
     Shutdown(String),
+
+    Tick, //render tick, triggers next cycle for system
+    Msg(String),
 }
 
 #[derive(Clone)]
@@ -19,11 +22,19 @@ pub struct Sys {
     comps: Vec<Comp>, 
     ch: Sender<Comm>,
 }
+/// system callbacks during cycle
+//todo: use trait fn and use with_ent in sysman if possible
+pub struct SysApply<Ft,Fu> 
+    where Ft: Fn(&mut Vec<Entity>), Fu: Fn(Eid,Comp) {
+        tick: Ft,
+        update: Fu,
+}
+
 impl Sys {
-    pub fn new (c:Vec<Comp>, f:Box<Fn(Comm)+Send>) -> (Sys,SysMan) {
+    pub fn new (c:Vec<Comp>) -> (Sys,SysMan) {
         let (chs,chr) = channel();
         (Sys { comps: c, ch: chs },
-         SysMan::new(chr,f))
+         SysMan::new(chr))
     }
     pub fn update (&self, c: Comm) {
         //println!("sending update: {}", c);
@@ -37,14 +48,14 @@ impl Sys {
 pub struct SysMan {
     ent: Vec<Entity>,
     ch: Receiver<Comm>,
-    work: Box<Fn(Comm)+'static+Send>,
+   // work:SysApply,
 }
 impl SysMan {
-    pub fn new (chr: Receiver<Comm>, f: Box<Fn(Comm)+Send>) -> SysMan {
-        SysMan { ent: Vec::new(), ch: chr, work: f }
+    pub fn new (chr: Receiver<Comm>) -> SysMan {
+        SysMan { ent: Vec::new(), ch: chr }
     }
 
-    pub fn with_ent<F> (&mut self, eid:Eid, f: F) where F: Fn(&mut Entity) {
+    fn with_ent<F> (&mut self, eid:Eid, f: F) where F: Fn(&mut Entity) {
         for e in self.ent.iter_mut() {
             if e.get_id() == eid.1 {
                 (f)(e);
@@ -52,21 +63,36 @@ impl SysMan {
         }
     }
 
+    /// signal other sys that are interested in similar comps
+    fn signal_others (&self, eid: Eid, c: &Comp, vs: &Vec<Sys>) {
+        for sys in vs.iter() {
+            'this_sys: for syscomp in sys.get_comps().iter() {
+                if syscomp.is(c) {
+                    sys.update(Comm::Update(eid,c.clone()));
+                    break 'this_sys;
+                }
+            }
+        }
+    }
+
     // called from CES
-    pub fn updater (mut self, avs: Arc<Vec<Sys>>) {
+    pub fn updater (mut self, vs: Vec<Sys>) {
         let mut chr = self.ch.recv();
         while chr.is_ok() {
             let comm = chr.unwrap();
             match comm {
-                Comm::Update(eid,comp) => (self.work)(comm),
+                Comm::Update(eid,comp) => {
+                  //  (self.work.update)(eid,comp);
+                    //self.signal_others(vs.as_slice());
+                },
+
+                //Comm::Tick => (self.work.tick)(&mut self.ent),
 
                 Comm::AddEnt(e) => { //todo: consider impl as trait, similar to ces add_ent fn
-                    println!("adding ent: {}", e);
                     self.ent.push(e);
                 },
 
                 Comm::RemoveEnt(eid) => { //todo: reimpl as fixed array, with inclusion indices
-                    println!("removing ent: {}", eid);
                     let mut idx = 0;
                     for e in self.ent.iter() {
                         if e.get_id() == eid.1 { break; }

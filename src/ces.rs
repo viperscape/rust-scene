@@ -5,10 +5,11 @@ use std::sync::Arc;
 //#[deriving(Show)]
 pub struct CES {
     ent: Vec<u64>, 
-    sys: Arc<Vec<Sys>>, //immutable, and Arc for systems to lookup 
+    sys: Vec<Sys>, //immutable, and Arc for systems to lookup 
     //todo: add a hashmap/vec of sys, based on ID for faster lookups
-    empty: Vec<uint>, //marked as removed/available entity slots, uint since that is based on vec total size
+    empty: Vec<usize>, //marked as removed/available entity slots, uint since that is based on vec total size
 }
+
 
 impl CES {
     pub fn new (mut s:Vec<(Sys,SysMan)>) -> CES {
@@ -16,21 +17,20 @@ impl CES {
         let mut vsm = Vec::new();
         s.into_iter().map(|(sys,sysman)| {vs.push(sys); vsm.push(sysman)}); 
 
-        let avs = Arc::new(vs);
-
         for sysman in vsm.drain() {
-            let avs_ = avs.clone();
+            let vs_ = vs.clone();
             Thread::spawn(move || {
-                sysman.updater(avs_); //constantly listens to CES communication
-            }).detach();
+                sysman.updater(vs_); //constantly listens to CES communication
+            });
         }
         
         CES { ent: Vec::new(), 
-              sys: avs,
+              sys: vs,
               empty: Vec::new() }
     }
 
     /// update systems with matching component
+    // todo: turn to trait for sys access
     pub fn update_sys<F> (&self, c: &Comp, f: F) where F: Fn(&Sys) {
         for sys in self.sys.iter() {
             'this_sys: for syscomp in sys.get_comps().iter() {

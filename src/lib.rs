@@ -1,4 +1,4 @@
-pub use system::{Sys,SysMan, Comm};
+pub use system::{Sys,SysMan,SysApply,Comm};
 pub use entity::{Entity};
 pub use component::{Comp};
 pub use composite::{Composite};
@@ -12,7 +12,7 @@ pub mod system;
 
 
 //todo: convert to tuple-struct?
-pub type Eid = (uint,u64); //entity specific ID
+pub type Eid = (usize,u64); //entity specific ID
 
 // for use in eventual arrays
-pub const MAX_ENT: uint = 65535;
+pub const MAX_ENT: usize = 65535;

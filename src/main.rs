@@ -1,5 +1,9 @@
+#![feature(box_syntax)]
+
 extern crate "rust-scene" as scene;
-use scene::{Comp,Composite,Entity,Sys,CES};
+
+use scene::{Comp,Composite,Entity,Sys,SysApply,CES};
+
 
 enum Composites {
     Player,
@@ -22,7 +26,8 @@ impl Composite for Composites {
 fn main() {
     let sys = vec!(Sys::new(vec!(Comp::Health(0),
                                  Comp::Collision),
-                            box |comm| println!("sysman: {}",comm)));
+                            ));//SysApply{ tick: |&:ref mut vs| (),
+                                 //     update: |&:eid,comp| () } ));
 
     let mut world = CES::new(sys);
 

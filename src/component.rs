@@ -1,7 +1,7 @@
 #[derive(Show, PartialEq, Copy, Clone)] // copy exists bc of CES sending systems updates
 pub enum Comp {
     Collect,
-    Health(int),
+    Health(u8),
    // Nodes(Vec<Entity>),
     Collision,
 }
