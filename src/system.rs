@@ -45,17 +45,18 @@ impl Sys {
     }
 }
 
-pub struct SysMan {
+pub struct SysMan { //<F> 
+  //  where F: Fn(&mut Vec<Entity>){
     ent: Vec<Entity>,
     ch: Receiver<Comm>,
-   // work:SysApply,
+  //  work:F,
 }
 impl SysMan {
     pub fn new (chr: Receiver<Comm>) -> SysMan {
         SysMan { ent: Vec::new(), ch: chr }
     }
 
-    fn with_ent<F> (&mut self, eid:Eid, f: F) where F: Fn(&mut Entity) {
+    fn with_ent<F1> (&mut self, eid:Eid, f: F1) where F1: Fn(&mut Entity) {
         for e in self.ent.iter_mut() {
             if e.get_id() == eid.1 {
                 (f)(e);
@@ -82,8 +83,8 @@ impl SysMan {
             let comm = chr.unwrap();
             match comm {
                 Comm::Update(eid,comp) => {
-                  //  (self.work.update)(eid,comp);
-                    //self.signal_others(vs.as_slice());
+                    self.with_ent(eid, |&:mut e| e.update_comp(comp)); //for now just swap the component out
+                    // todo: consider commuting component updates, impl callback for customization
                 },
 
                 //Comm::Tick => (self.work.tick)(&mut self.ent),

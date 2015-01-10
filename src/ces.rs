@@ -8,6 +8,7 @@ pub struct CES {
     sys: Vec<Sys>, //immutable, and Arc for systems to lookup 
     //todo: add a hashmap/vec of sys, based on ID for faster lookups
     empty: Vec<usize>, //marked as removed/available entity slots, uint since that is based on vec total size
+
 }
 
 

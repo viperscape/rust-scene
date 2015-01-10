@@ -33,7 +33,13 @@ impl Entity {
         if matched { self.0.remove(idx); }
     }
 
-
+    pub fn update_comp (&mut self, c:Comp) {
+        for myc in self.0.iter_mut() {
+            if myc.is(&c) { 
+                *myc = c;
+            }
+        }
+    }
 
     //ignore all of this
   /*  fn add_node (&mut self, e:Entity) {

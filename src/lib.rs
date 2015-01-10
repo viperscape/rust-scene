@@ -14,5 +14,6 @@ pub mod system;
 //todo: convert to tuple-struct?
 pub type Eid = (usize,u64); //entity specific ID
 
+
 // for use in eventual arrays
 pub const MAX_ENT: usize = 65535;
