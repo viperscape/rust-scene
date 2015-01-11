@@ -2,7 +2,7 @@ pub use system::{Sys,SysMan,SysApply,Comm};
 pub use entity::{Entity};
 pub use component::{Comp};
 pub use composite::{Composite};
-pub use ces::{CES};
+pub use ces::{CES,Ents};
 
 pub mod entity;
 pub mod composite;

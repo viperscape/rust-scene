@@ -59,8 +59,8 @@ fn main() {
         let mut inner = &mut aes2[0].comps.write().unwrap();
          inner.push(Comp::Collision);
 
-        chs.send(true);
         
+        chs.send(true);
     });
     
 

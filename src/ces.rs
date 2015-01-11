@@ -1,38 +1,44 @@
 use super::{Sys,SysMan,Entity,Eid,Comm, Comp, MAX_ENT};
 use std::thread::Thread;
 use std::sync::{Arc,RwLock};
+use std::sync::mpsc::{Receiver};
+
+pub type Ents = Arc<RwLock<Vec<RwLock<Entity>>>>;
 
 //#[deriving(Show)]
 pub struct CES {
-    ent: Arc<RwLock<Vec<RwLock<Entity>>>>, //;MAX_ENT]>, 
+    ent: Ents, //;MAX_ENT]>, 
     sys: Vec<Sys>, //immutable, for systems to lookup 
     //todo: add a hashmap/vec of sys, based on ID for faster lookups
     empty: Vec<usize>, //marked as removed/available entity slots
 }
 
 impl CES {
-    pub fn new (mut s:Vec<(Sys,SysMan)>) -> CES {
+    pub fn new (mut s:Vec<(Sys,Receiver<Comm>)>) -> CES {
         let mut vs = Vec::new();
-        let mut vsm = Vec::new();
-        s.into_iter().map(|(sys,sysman)| {vs.push(sys); vsm.push(sysman)}); 
-
-        for sysman in vsm.drain() {
-            let vs_ = vs.clone();
-            Thread::spawn(move || {
-                sysman.updater(vs_); //constantly listens to CES communication
-            });
-        }
+        let mut vschr = Vec::new();
+        s.into_iter().map(|(sys,chr)| {vs.push(sys); vschr.push(chr)}); 
         
+        let ces = CES { ent: Arc::new(RwLock::new(Vec::new())), 
+                        sys: vs,
+                        empty: Vec::new(), };
+
+        
+
+        vschr.into_iter().map(|chr| {
+            let ents = ces.ent.clone();
+            Thread::spawn(move || {
+                let sysman = SysMan::new(chr, ents);
+                sysman.updater(); //constantly listens to CES communication
+            });
+        });
+  
        /* let mut ea = [RwLock::new(Entity::new(Vec::new()));MAX_ENT];
         for n in range(1,MAX_ENT) {
             ea[n] = RwLock::new(Entity::new(Vec::new()));
         }*/
 
-        
-
-        CES { ent: Arc::new(RwLock::new(Vec::new())), 
-              sys: vs,
-              empty: Vec::new(), }
+        ces
     }
 
     /// update systems with matching component
@@ -83,7 +89,7 @@ impl CES {
                         
                        // let mut comps = Vec::new();
                         //comps.push_all(e.get_comps());
-                        sys.update(Comm::AddEnt(e.clone())); //eid,comps));
+                        sys.update(Comm::AddEnt(eid)); //eid,comps));
                         break 'this_sys;
                     }
                 }

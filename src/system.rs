@@ -1,20 +1,19 @@
-use super::{Comp,Eid, Entity, MAX_ENT};
+use super::{CES, Comp,Eid, Ents, Entity, MAX_ENT};
 use std::sync::mpsc::{Sender, Receiver, channel};
-use std::sync::Arc;
+use std::sync::{Arc,RwLock};
 
 /// communication from CES to systems, and between systems
 #[derive(Show,Clone)]
 pub enum Comm {
-    AddEnt(Entity),//Eid,Vec<Comp>),
+    AddEnt(Eid),
     AddComp(Eid,Comp), //ent add comp 
     Update(Eid,Comp),
     
     RemoveComp(Eid,Comp), //ent remove comp
     RemoveEnt(Eid),
-    Shutdown(String),
 
+    Shutdown(String),
     Tick, //render tick, triggers next cycle for system
-    Msg(String),
 }
 
 #[derive(Clone)]
@@ -31,10 +30,10 @@ pub struct SysApply<Ft,Fu>
 }
 
 impl Sys {
-    pub fn new (c:Vec<Comp>) -> (Sys,SysMan) {
+    pub fn new (c:Vec<Comp>) -> (Sys,Receiver<Comm>) {
         let (chs,chr) = channel();
         (Sys { comps: c, ch: chs },
-         SysMan::new(chr))
+         chr)//SysMan::new(chr))
     }
     pub fn update (&self, c: Comm) {
         self.ch.send(c);
@@ -46,21 +45,19 @@ impl Sys {
 
 pub struct SysMan { //<F> 
   //  where F: Fn(&mut Vec<Entity>){
-    ent: Vec<Entity>,
+    eid: Vec<Eid>,
     ch: Receiver<Comm>,
-  //  work:F,
+    ent: Ents,
 }
 impl SysMan {
-    pub fn new (chr: Receiver<Comm>) -> SysMan {
-        SysMan { ent: Vec::new(), ch: chr }
+    pub fn new (chr: Receiver<Comm>, ents: Ents) -> SysMan {
+        SysMan { eid: Vec::new(), ch: chr, ent: ents }
     }
 
-    fn with_ent<F1> (&mut self, eid:Eid, f: F1) where F1: Fn(&mut Entity) {
-        for e in self.ent.iter_mut() {
-            if e.get_id() == eid.1 {
-                (f)(e);
-            }
-        }
+    fn with_ent_mut<F1> (&mut self, eid:Eid, f: F1) where F1: Fn(&mut Entity) {
+       // let inner = self.ces.ent.read().unwrap();
+       // let mut ent = inner[eid.0].write().unwrap();
+       // (f)(&mut *ent);
     }
 
     /// signal other sys that are interested in similar comps
@@ -76,38 +73,38 @@ impl SysMan {
     }
 
     // called from CES
-    pub fn updater (mut self, vs: Vec<Sys>) {
+    pub fn updater (mut self) {
         let mut chr = self.ch.recv();
         while chr.is_ok() {
             let comm = chr.unwrap();
             match comm {
                 Comm::Update(eid,comp) => {
-                    self.with_ent(eid, |&:mut e| e.update_comp(comp)); //for now just swap the component out
+                   // self.with_ent_mut(eid, |&:mut e| e.update_comp(comp)); //for now just swap the component out
                     // todo: consider commuting component updates, impl callback for customization
                 },
 
                 //Comm::Tick => (self.work.tick)(&mut self.ent),
 
-                Comm::AddEnt(e) => { //todo: consider impl as trait, similar to ces add_ent fn
-                    self.ent.push(e);
+                Comm::AddEnt(eid) => { //todo: consider impl as trait, similar to ces add_ent fn
+                    self.eid.push(eid);
                 },
 
                 Comm::RemoveEnt(eid) => { //todo: reimpl as fixed array, with inclusion indices
                     let mut idx = 0;
-                    for e in self.ent.iter() {
-                        if e.get_id() == eid.1 { break; }
+                    for e in self.eid.iter() {
+                        if e.1 == eid.1 { break; }
                         idx += 1;
                     }
 
-                    self.ent.remove(idx);
+                    self.eid.remove(idx);
                 },
 
                 Comm::AddComp(eid,comp) => {
-                    self.with_ent(eid, |&:mut e| e.add_comp(comp));
+                    //self.with_ent(eid, |&:mut e| e.add_comp(comp));
                 },
 
                 Comm::RemoveComp(eid,comp) => {
-                    self.with_ent(eid, |&:mut e| e.rem_comp(comp));
+                    //self.with_ent(eid, |&:mut e| e.rem_comp(comp));
                 },                
 
                 Comm::Shutdown(r) => {
