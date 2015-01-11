@@ -11,7 +11,7 @@ pub mod ces;
 pub mod system;
 
 
-//todo: convert to tuple-struct?
+//todo: convert to struct?
 pub type Eid = (usize,u64); //entity specific ID
 
 

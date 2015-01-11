@@ -37,7 +37,6 @@ impl Sys {
          SysMan::new(chr))
     }
     pub fn update (&self, c: Comm) {
-        //println!("sending update: {}", c);
         self.ch.send(c);
     }
     pub fn get_comps (&self) -> &[Comp] {

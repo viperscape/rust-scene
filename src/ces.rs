@@ -1,16 +1,14 @@
-use super::{Sys,SysMan,Entity,Eid,Comm, Comp};
+use super::{Sys,SysMan,Entity,Eid,Comm, Comp, MAX_ENT};
 use std::thread::Thread;
-use std::sync::Arc;
+use std::sync::{Arc,RwLock};
 
 //#[deriving(Show)]
 pub struct CES {
-    ent: Vec<u64>, 
-    sys: Vec<Sys>, //immutable, and Arc for systems to lookup 
+    ent: Arc<RwLock<Vec<RwLock<Entity>>>>, //;MAX_ENT]>, 
+    sys: Vec<Sys>, //immutable, for systems to lookup 
     //todo: add a hashmap/vec of sys, based on ID for faster lookups
-    empty: Vec<usize>, //marked as removed/available entity slots, uint since that is based on vec total size
-
+    empty: Vec<usize>, //marked as removed/available entity slots
 }
-
 
 impl CES {
     pub fn new (mut s:Vec<(Sys,SysMan)>) -> CES {
@@ -25,9 +23,16 @@ impl CES {
             });
         }
         
-        CES { ent: Vec::new(), 
+       /* let mut ea = [RwLock::new(Entity::new(Vec::new()));MAX_ENT];
+        for n in range(1,MAX_ENT) {
+            ea[n] = RwLock::new(Entity::new(Vec::new()));
+        }*/
+
+        
+
+        CES { ent: Arc::new(RwLock::new(Vec::new())), 
               sys: vs,
-              empty: Vec::new() }
+              empty: Vec::new(), }
     }
 
     /// update systems with matching component
@@ -54,16 +59,20 @@ impl CES {
     /// use rand u64 for uid.. for now,; but, consider switching to incremental u64
     pub fn add_ent (&mut self, e:Entity) -> Eid {
         let uid = e.get_id(); //rand style entity uid comes from entity build, copy it
+        let e2 = e.clone();
         let empty = self.empty.pop();
         let eid = match empty {
             Some(idx) => {
                 let eid = (idx,uid);
-                self.ent[idx] = uid; //swap out ent 
+                {let mut inner = self.ent.write().unwrap();
+                 *inner[idx].write().unwrap() = e2;} //swap out ent 
                 eid
             }
             None => { 
-                self.ent.push(uid);
-                (self.ent.len()-1,uid)
+                 let idx = {let mut inner = self.ent.write().unwrap();
+                            inner.push(RwLock::new(e2));
+                            inner.len()-1};
+                (idx,uid)
             }
         };
 
@@ -85,7 +94,11 @@ impl CES {
     }
 
     pub fn rem_ent (&mut self, eid: Eid) {
-        if self.ent[eid.0] == eid.1 { 
+        let flag = {let inner = self.ent.read().unwrap();
+                    if inner[eid.0].read().unwrap().get_id() == eid.1 { true }
+                    else { false }};
+
+        if flag {
             self.empty.push(eid.0); //mark idx as empty, by adding it to empty vec
             self.broadcast_sys(Comm::RemoveEnt(eid));
         }

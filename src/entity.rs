@@ -1,6 +1,7 @@
 use super::{Comp};
 use std::rand;
 
+
 #[derive(Show,Clone)]//, PartialEq)]
 pub struct Entity(Vec<Comp>,u64);
 
