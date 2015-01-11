@@ -99,6 +99,12 @@ impl CES {
         eid
     }
 
+    fn with_ent_mut<F1> (&mut self, eid:Eid, f: F1) where F1: Fn(&mut Entity) {
+        let inner = self.ent.read().unwrap();
+        let mut ent = inner[eid.0].write().unwrap();
+        (f)(&mut *ent);
+    }
+
     pub fn rem_ent (&mut self, eid: Eid) {
         let flag = {let inner = self.ent.read().unwrap();
                     if inner[eid.0].read().unwrap().get_id() == eid.1 { true }
@@ -111,11 +117,13 @@ impl CES {
     }
 
     pub fn ent_rem_comp (&mut self, eid: Eid, c: Comp) {
-        self.update_sys(&c, |sys:&Sys| sys.update(Comm::RemoveComp(eid,c)));
+        self.with_ent_mut(eid, |&:mut e| e.rem_comp(c));
+        //self.update_sys(&c, |sys:&Sys| sys.update(Comm::RemoveComp(eid,c)));
     }
 
     pub fn ent_add_comp (&mut self, eid: Eid, c: Comp) {
-        self.update_sys(&c, |sys:&Sys| sys.update(Comm::AddComp(eid,c)));
+        self.with_ent_mut(eid, |&:mut e| e.add_comp(c));
+        //self.update_sys(&c, |sys:&Sys| sys.update(Comm::AddComp(eid,c)));
     }
 
     pub fn shutdown(&self, s:&'static str) {
