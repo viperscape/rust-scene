@@ -12,4 +12,5 @@ This is, in its current state, template code to review and use in a project. My 
 * Try and avoid vtable, reflection, indirection where possible
 
 [see example](/src/main.rs)
+
 check out the [wiki](https://github.com/viperscape/rust-scene/wiki)

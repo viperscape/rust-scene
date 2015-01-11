@@ -55,9 +55,9 @@ impl SysMan {
     }
 
     fn with_ent_mut<F1> (&mut self, eid:Eid, f: F1) where F1: Fn(&mut Entity) {
-       // let inner = self.ces.ent.read().unwrap();
-       // let mut ent = inner[eid.0].write().unwrap();
-       // (f)(&mut *ent);
+        let inner = self.ent.read().unwrap();
+        let mut ent = inner[eid.0].write().unwrap();
+        (f)(&mut *ent);
     }
 
     /// signal other sys that are interested in similar comps
