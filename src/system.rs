@@ -32,8 +32,7 @@ pub struct SysApply<Ft,Fu>
 impl Sys {
     pub fn new (c:Vec<Comp>) -> (Sys,Receiver<Comm>) {
         let (chs,chr) = channel();
-        (Sys { comps: c, ch: chs },
-         chr)//SysMan::new(chr))
+        (Sys { comps: c, ch: chs }, chr)
     }
     pub fn update (&self, c: Comm) {
         self.ch.send(c);
@@ -78,11 +77,6 @@ impl SysMan {
         while chr.is_ok() {
             let comm = chr.unwrap();
             match comm {
-                Comm::Update(eid,comp) => {
-                   // self.with_ent_mut(eid, |&:mut e| e.update_comp(comp)); //for now just swap the component out
-                    // todo: consider commuting component updates, impl callback for customization
-                },
-
                 //Comm::Tick => (self.work.tick)(&mut self.ent),
 
                 Comm::AddEnt(eid) => { //todo: consider impl as trait, similar to ces add_ent fn
@@ -98,20 +92,11 @@ impl SysMan {
 
                     self.eid.remove(idx);
                 },
-
-                Comm::AddComp(eid,comp) => {
-                    //self.with_ent(eid, |&:mut e| e.add_comp(comp));
-                },
-
-                Comm::RemoveComp(eid,comp) => {
-                    //self.with_ent(eid, |&:mut e| e.rem_comp(comp));
-                },                
-
                 Comm::Shutdown(r) => {
                     println!("shutting down sys: {}",r);
                     break;
                 },
-               
+              
                 _ => (),
             }
 

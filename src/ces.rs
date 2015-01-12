@@ -66,8 +66,7 @@ impl CES {
     pub fn add_ent (&mut self, e:Entity) -> Eid {
         let uid = e.get_id(); //rand style entity uid comes from entity build, copy it
         let e2 = e.clone();
-        let empty = self.empty.pop();
-        let eid = match empty {
+        let eid = match self.empty.pop() {
             Some(idx) => {
                 let eid = (idx,uid);
                 {let mut inner = self.ent.write().unwrap();
@@ -86,10 +85,7 @@ impl CES {
             'this_sys: for syscomp in sys.get_comps().iter() {
                 for entcomp in e.get_comps().iter() {
                     if syscomp.is(entcomp) {
-                        
-                       // let mut comps = Vec::new();
-                        //comps.push_all(e.get_comps());
-                        sys.update(Comm::AddEnt(eid)); //eid,comps));
+                        sys.update(Comm::AddEnt(eid));
                         break 'this_sys;
                     }
                 }
@@ -118,12 +114,10 @@ impl CES {
 
     pub fn ent_rem_comp (&mut self, eid: Eid, c: Comp) {
         self.with_ent_mut(eid, |&:mut e| e.rem_comp(c));
-        //self.update_sys(&c, |sys:&Sys| sys.update(Comm::RemoveComp(eid,c)));
     }
 
     pub fn ent_add_comp (&mut self, eid: Eid, c: Comp) {
         self.with_ent_mut(eid, |&:mut e| e.add_comp(c));
-        //self.update_sys(&c, |sys:&Sys| sys.update(Comm::AddComp(eid,c)));
     }
 
     pub fn shutdown(&self, s:&'static str) {
