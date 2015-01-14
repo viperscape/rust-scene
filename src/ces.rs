@@ -80,7 +80,7 @@ impl CES {
             }
         };
         
-        /*
+        //note: the lifetime checker did not like this to be all in one line, so split up the read locks and use get_comps later
         let ent = &self.ent.read().unwrap()[eid.0];
         let inner = ent.read().unwrap();
 
@@ -95,7 +95,7 @@ impl CES {
                 }
             }
         }
-        */
+        
 
         eid
     }
