@@ -65,32 +65,38 @@ impl CES {
     /// use rand u64 for uid.. for now,; but, consider switching to incremental u64
     pub fn add_ent (&mut self, e:Entity) -> Eid {
         let uid = e.get_id(); //rand style entity uid comes from entity build, copy it
-        let e2 = e.clone();
+       
         let eid = match self.empty.pop() {
             Some(idx) => {
                 let eid = (idx,uid);
                 {let mut inner = self.ent.write().unwrap();
-                 *inner[idx].write().unwrap() = e2;} //swap out ent 
+                 *inner[idx].write().unwrap() = e;} //swap out ent 
                 eid
             }
             None => { 
                  let idx = {let mut inner = self.ent.write().unwrap();
-                            inner.push(RwLock::new(e2));
+                            inner.push(RwLock::new(e));
                             inner.len()-1};
                 (idx,uid)
             }
         };
+        
+        /*
+        let ent = &self.ent.read().unwrap()[eid.0];
+        let inner = ent.read().unwrap();
 
         for sys in self.sys.iter() {
             'this_sys: for syscomp in sys.get_comps().iter() {
-                for entcomp in e.get_comps().iter() {
-                    if syscomp.is(entcomp) {
+                for entcomp in inner.get_comps().iter() {
+                    let rl = entcomp.read().unwrap();
+                    if syscomp.is(&*rl) {
                         sys.update(Comm::AddEnt(eid));
                         break 'this_sys;
                     }
                 }
             }
         }
+        */
 
         eid
     }

@@ -1,14 +1,16 @@
-pub use system::{Sys,SysMan,SysApply,Comm};
+pub use system::{Sys,SysMan,SysApply};
 pub use entity::{Entity};
 pub use component::{Comp};
 pub use composite::{Composite};
 pub use ces::{CES,Ents};
+pub use systems::{Systems,Comm};
 
 pub mod entity;
 pub mod composite;
 pub mod component;
 pub mod ces;
 pub mod system;
+pub mod systems;
 
 
 //todo: convert to struct?

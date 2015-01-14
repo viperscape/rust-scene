@@ -1,25 +1,31 @@
 use super::{Comp};
 use std::rand;
+use std::sync::RwLock;
 
 
-#[derive(Show,Clone)]//, PartialEq)]
-pub struct Entity(Vec<Comp>,u64);
+//#[derive(Show,Clone)]//, PartialEq)]
+pub struct Entity(Vec<RwLock<Comp>>,u64);
 
 impl Entity {
-    pub fn new (c: Vec<Comp>) -> Entity {
-        Entity(c,rand::random::<u64>())
+    pub fn new (mut c: Vec<Comp>) -> Entity {
+        let mut vc: Vec<RwLock<Comp>> = Vec::new();
+        for n in c.drain() {
+            vc.push(RwLock::new(n));
+        }
+
+        Entity(vc,rand::random::<u64>())
     }
 
     pub fn get_id (&self) -> u64 {
         self.1
     }
 
-    pub fn get_comps (&self) -> &[Comp] {
+    pub fn get_comps (&self) -> &[RwLock<Comp>] {
         self.0.as_slice()
     }
 
     pub fn add_comp (&mut self, c:Comp) {
-        self.0.push(c);
+        self.0.push(RwLock::new(c));
     }
 
     //todo: make this pretty
@@ -27,7 +33,8 @@ impl Entity {
         let mut matched = false;
         let mut idx = 0;
         for myc in self.0.iter() {
-            if myc.is(&c) { matched=true; break; }
+            let rl = myc.read().unwrap();
+            if rl.is(&c) { matched=true; break; }
             idx += 1;
         }
 
@@ -36,55 +43,11 @@ impl Entity {
 
     pub fn update_comp (&mut self, c:Comp) {
         for myc in self.0.iter_mut() {
-            if myc.is(&c) { 
-                *myc = c;
+            let mut wl = myc.write().unwrap();
+            if wl.is(&c) { 
+                *wl = c;
             }
         }
     }
-
-    //ignore all of this
-  /*  fn add_node (&mut self, e:Entity) {
-        for i in self.0.iter_mut() {
-            match *i {
-                Comp::Nodes(ref mut nv) => { nv.push(e); break },
-                _ => (),
-            }
-        }
-    }*/
-
-    /// returns vector of element positions to find node ///
-    /// use pop to move cursor on vector, and get entity at that position ///
-  /*  fn find_node (&self, e: &str) -> Option<Vec<u8>> {
-        let mut trace = Vec::new();
-        let mut res: Option<Vec<u8>> = None;
-        if self.0 == e.as_slice() {
-            println!("found {}",self);
-            Some(trace)
-        }
-        else {
-            for i in self.1.iter() {
-                match *i {
-                    Comp::Nodes(ref nv) => {
-                        let mut t = 0;
-                        for j in nv.iter() {
-                            match j.find_node(e.as_slice()) {
-                                Some(r) => {
-                                    trace.push_all(r.as_slice());
-                                    trace.push(t);
-                                },
-                                None => (),
-                            }
-                            t += 1;
-                        }
-                    },
-                    _ => (),
-                }
-            }
-
-            if (trace.as_slice().len()>0) {Some(trace)}
-            else {None}
-        }
-
-    }*/
 }
 

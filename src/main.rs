@@ -13,7 +13,7 @@ impl Composite for Composites {
                 Entity::new(vec!(Comp::Health(100),
                             Comp::Collision)),
             Composites::Enemy => 
-                Entity::new(vec!(Comp::Health(500),
+                Entity::new(vec!(Comp::Health(50),
                             Comp::Collision)),
         }
     }

@@ -1,20 +1,6 @@
-use super::{CES, Comp,Eid, Ents, Entity, MAX_ENT};
+use super::{CES, Systems,Comm, Comp,Eid, Ents, Entity, MAX_ENT};
 use std::sync::mpsc::{Sender, Receiver, channel};
 use std::sync::{Arc,RwLock};
-
-/// communication from CES to systems, and between systems
-#[derive(Show,Clone)]
-pub enum Comm {
-    AddEnt(Eid),
-    AddComp(Eid,Comp), //ent add comp 
-    Update(Eid,Comp),
-    
-    RemoveComp(Eid,Comp), //ent remove comp
-    RemoveEnt(Eid),
-
-    Shutdown(String),
-    Tick, //render tick, triggers next cycle for system
-}
 
 #[derive(Clone)]
 pub struct Sys {
