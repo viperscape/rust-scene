@@ -1,9 +1,8 @@
-use super::{Sys,SysMan,Entity,Eid,Comm, Comp, MAX_ENT};
+use super::{Sys,SysMan,Entity,Ents,Eid,Comm, Comp, MAX_ENT};
 use std::thread::Thread;
 use std::sync::{Arc,RwLock};
 use std::sync::mpsc::{Receiver};
 
-pub type Ents = Arc<RwLock<Vec<RwLock<Entity>>>>;
 
 //#[deriving(Show)]
 pub struct CES {
